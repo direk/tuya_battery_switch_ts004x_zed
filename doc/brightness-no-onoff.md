@@ -94,8 +94,15 @@ required.
 
 ## Hardware acceptance test
 
-This firmware has not yet been tested on a physical remote or Hue lamp.
-Confirm these cases after installing it:
+The fork owner tested TS0046 with Philips Hue RGB GU10 bulbs on 21 November
+2026. Both brightening and dimming affected the lit group while leaving the
+switched-off group off. Direct binding also worked with Zigbee2MQTT stopped.
+After OTA, reselecting and saving the new switch types for buttons 5 and 6 was
+necessary for the intended behavior. If behavior still matches the original
+modes, wake the remote, save the new types again, and read them back.
+
+Other remote variants and lamp models have not been hardware-verified.
+For a new installation, confirm these cases:
 
 | Initial state | Double click / hold button 5 or 6 | Expected state |
 | --- | --- | --- |

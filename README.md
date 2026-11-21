@@ -85,7 +85,14 @@ bindings, and command retries. All five external converters loaded successfully
 with `zigbee-herdsman-converters` 26.135.0. The OTA header, version, lengths, CRC,
 and binary checksums were checked.
 
-Physical remote and lamp verification is still pending. See the
+Hardware-tested by the fork owner on **TS0046 with Philips Hue RGB GU10 bulbs**
+(21 November 2026). Brightening and dimming changed only lit lamps, leaving the
+switched-off group off. Direct binding also worked with **Zigbee2MQTT stopped**.
+After OTA, the new switch types had to be selected and saved again for buttons
+5 and 6 before the intended behavior took effect.
+
+This hardware result applies to the tested TS0046/Hue setup; other remote
+variants and lamp models have not been hardware-verified. See the
 [detailed installation, hardware test checklist, and build instructions](doc/brightness-no-onoff.md).
 
 Run the host tests with:
