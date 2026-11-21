@@ -101,6 +101,7 @@ bool app_add_repeat_cmd(uint16_t clId, uint8_t srcEp, uint8_t dstEp, uint8_t add
                         case ZCL_CMD_LEVEL_STOP:
                             memcpy(&repeat_cmd[i].level_stop, (stop_t*)args, sizeof(stop_t));
                             break;
+                        case ZCL_CMD_LEVEL_STEP_WITH_ON_OFF:
                         case ZCL_CMD_LEVEL_STEP:
                             memcpy(&repeat_cmd[i].level_step, (step_t*)args, sizeof(step_t));
                             break;

@@ -2,13 +2,23 @@
 
 static status_t st = 0xFF;
 
+bool app_level_no_onoff(uint8_t ep) {
+    uint8_t type = device_settings.switchType[ep-1];
+    return type == ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_NO_ONOFF ||
+           type == ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_UP_NO_ONOFF ||
+           type == ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_DOWN_NO_ONOFF;
+}
+
 void app_move_to_level(uint8_t ep, uint8_t up_down) {
     status_t st;
     epInfo_t dstEpInfo;
     moveToLvl_t move2Level;
     move2Level.level = up_down?device_settings.levelMin[ep-1]:device_settings.levelMax[ep-1];
     move2Level.transitionTime = 25;
-    move2Level.optPresent = 0;
+    /* Explicitly ignore level commands while off in the brightness-only modes. */
+    move2Level.optPresent = app_level_no_onoff(ep);
+    move2Level.optionsMask = ZCL_LEVEL_OPTIONS_EXECUTE_IF_OFF;
+    move2Level.optionsOverride = 0;
 
     uint8_t dstEp = 0;
 
@@ -25,7 +35,7 @@ void app_move_to_level(uint8_t ep, uint8_t up_down) {
         aps_group_tbl_ent_t *grEntry = aps_group_search(groupList[i], ep);
         if (grEntry) {
             dstEpInfo.dstAddr.shortAddr = grEntry->group_addr;
-            if (up_down == LEVEL_MOVE_UP) {
+            if (up_down == LEVEL_MOVE_UP && !app_level_no_onoff(ep)) {
                 st = zcl_level_move2levelWithOnOffCmd(ep, &dstEpInfo, TRUE, &move2Level);
             } else {
                 st = zcl_level_move2levelCmd(ep, &dstEpInfo, TRUE, &move2Level);
@@ -55,7 +65,7 @@ void app_move_to_level(uint8_t ep, uint8_t up_down) {
                 memcpy(dstEpInfo.dstAddr.extAddr, bind_tbl->dstExtAddrInfo.extAddr, sizeof(extAddr_t));
                 dstEp = bind_tbl->dstExtAddrInfo.dstEp;
             }
-            if (up_down == LEVEL_MOVE_UP) {
+            if (up_down == LEVEL_MOVE_UP && !app_level_no_onoff(ep)) {
                 app_add_repeat_cmd(ZCL_CLUSTER_GEN_LEVEL_CONTROL, ep, dstEp, dstEpInfo.dstAddrMode, dstEpInfo.dstAddr, ZCL_CMD_LEVEL_MOVE_TO_LEVEL_WITH_ON_OFF, &move2Level);
                 st = zcl_level_move2levelWithOnOffCmd(ep, &dstEpInfo, TRUE, &move2Level);
             } else {
@@ -95,7 +105,10 @@ void app_move_level(uint8_t ep, uint8_t up_down) {
     move_t move;
     move.moveMode = up_down;
     move.rate = device_settings.defaultMoveRate[ep-1];
-    move.optPresent = 0;
+    /* Explicitly ignore level commands while off in the brightness-only modes. */
+    move.optPresent = app_level_no_onoff(ep);
+    move.optionsMask = ZCL_LEVEL_OPTIONS_EXECUTE_IF_OFF;
+    move.optionsOverride = 0;
 
     uint8_t dstEp = 0;
 
@@ -112,7 +125,11 @@ void app_move_level(uint8_t ep, uint8_t up_down) {
         aps_group_tbl_ent_t *grEntry = aps_group_search(groupList[i], ep);
         if (grEntry) {
             dstEpInfo.dstAddr.shortAddr = grEntry->group_addr;
-            st = zcl_level_moveWithOnOffCmd(ep, &dstEpInfo, TRUE, &move);
+            if (app_level_no_onoff(ep)) {
+                st = zcl_level_moveCmd(ep, &dstEpInfo, TRUE, &move);
+            } else {
+                st = zcl_level_moveWithOnOffCmd(ep, &dstEpInfo, TRUE, &move);
+            }
             APP_DEBUG(DEBUG_LEVEL_EN, "Level move %s for bind with rate: %d, src_ep: %d, dst_ep: %d, addr: 0x%04x, status: %d\r\n",
                     up_down?"Down":"Up", move.rate, ep, grEntry->n_endpoints, grEntry->group_addr, st);
         }
@@ -138,8 +155,13 @@ void app_move_level(uint8_t ep, uint8_t up_down) {
                 memcpy(dstEpInfo.dstAddr.extAddr, bind_tbl->dstExtAddrInfo.extAddr, sizeof(extAddr_t));
                 dstEp = bind_tbl->dstExtAddrInfo.dstEp;
             }
-            app_add_repeat_cmd(ZCL_CLUSTER_GEN_LEVEL_CONTROL, ep, dstEp, dstEpInfo.dstAddrMode, dstEpInfo.dstAddr, ZCL_CMD_LEVEL_MOVE_WITH_ON_OFF, &move);
-            st = zcl_level_moveWithOnOffCmd(ep, &dstEpInfo, TRUE, &move);
+            app_add_repeat_cmd(ZCL_CLUSTER_GEN_LEVEL_CONTROL, ep, dstEp, dstEpInfo.dstAddrMode, dstEpInfo.dstAddr,
+                    app_level_no_onoff(ep) ? ZCL_CMD_LEVEL_MOVE : ZCL_CMD_LEVEL_MOVE_WITH_ON_OFF, &move);
+            if (app_level_no_onoff(ep)) {
+                st = zcl_level_moveCmd(ep, &dstEpInfo, TRUE, &move);
+            } else {
+                st = zcl_level_moveWithOnOffCmd(ep, &dstEpInfo, TRUE, &move);
+            }
 #if DEBUG_LEVEL_EN
             APP_DEBUG(DEBUG_LEVEL_EN, "Level move %s for bind with rate: %d, ep: %d, clId: 0x%04x, addrMode: %d - %s, ",
                     up_down?"Down":"Up", move.rate, bind_tbl->srcEp, bind_tbl->clusterId, dstEpInfo.dstAddrMode,
@@ -170,7 +192,10 @@ void app_stop_level(uint8_t ep) {
 
     epInfo_t dstEpInfo;
     stop_t stop;
-    stop.optPresent = 0;
+    /* Explicitly ignore level commands while off in the brightness-only modes. */
+    stop.optPresent = app_level_no_onoff(ep);
+    stop.optionsMask = ZCL_LEVEL_OPTIONS_EXECUTE_IF_OFF;
+    stop.optionsOverride = 0;
 
     uint8_t dstEp = 0;
 
@@ -247,7 +272,10 @@ void app_step_level(uint8_t ep, uint8_t up_down) {
     step.stepMode = up_down;
     step.stepSize = 25;
     step.transitionTime = 1;
-    step.optPresent = 0;
+    /* Explicitly ignore level commands while off in the brightness-only modes. */
+    step.optPresent = app_level_no_onoff(ep);
+    step.optionsMask = ZCL_LEVEL_OPTIONS_EXECUTE_IF_OFF;
+    step.optionsOverride = 0;
 
     uint8_t dstEp = 0;
 
@@ -264,7 +292,11 @@ void app_step_level(uint8_t ep, uint8_t up_down) {
         aps_group_tbl_ent_t *grEntry = aps_group_search(groupList[i], ep);
         if (grEntry) {
             dstEpInfo.dstAddr.shortAddr = grEntry->group_addr;
-            st = zcl_level_stepWithOnOffCmd(ep, &dstEpInfo, TRUE, &step);
+            if (app_level_no_onoff(ep)) {
+                st = zcl_level_stepCmd(ep, &dstEpInfo, TRUE, &step);
+            } else {
+                st = zcl_level_stepWithOnOffCmd(ep, &dstEpInfo, TRUE, &step);
+            }
             APP_DEBUG(DEBUG_LEVEL_EN, "Level step %s for bind with size: %d, src_ep: %d, dst_ep: %d, addr: 0x%04x, status: %d\r\n",
                     up_down?"Down":"Up", step.stepSize, ep, grEntry->n_endpoints, grEntry->group_addr, st);
         }
@@ -290,8 +322,13 @@ void app_step_level(uint8_t ep, uint8_t up_down) {
                 memcpy(dstEpInfo.dstAddr.extAddr, bind_tbl->dstExtAddrInfo.extAddr, sizeof(extAddr_t));
                 dstEp = bind_tbl->dstExtAddrInfo.dstEp;
             }
-            app_add_repeat_cmd(ZCL_CLUSTER_GEN_LEVEL_CONTROL, ep, dstEp, dstEpInfo.dstAddrMode, dstEpInfo.dstAddr, ZCL_CMD_LEVEL_STEP, &step);
-            st = zcl_level_stepWithOnOffCmd(ep, &dstEpInfo, TRUE, &step);
+            app_add_repeat_cmd(ZCL_CLUSTER_GEN_LEVEL_CONTROL, ep, dstEp, dstEpInfo.dstAddrMode, dstEpInfo.dstAddr,
+                    app_level_no_onoff(ep) ? ZCL_CMD_LEVEL_STEP : ZCL_CMD_LEVEL_STEP_WITH_ON_OFF, &step);
+            if (app_level_no_onoff(ep)) {
+                st = zcl_level_stepCmd(ep, &dstEpInfo, TRUE, &step);
+            } else {
+                st = zcl_level_stepWithOnOffCmd(ep, &dstEpInfo, TRUE, &step);
+            }
 #if DEBUG_LEVEL_EN
             APP_DEBUG(DEBUG_LEVEL_EN, "Level step %s for bind with size: %d, ep: %d, clId: 0x%04x, addrMode: %d - %s, ",
                     up_down?"Down":"Up", step.stepSize, bind_tbl->srcEp, bind_tbl->clusterId, dstEpInfo.dstAddrMode,
@@ -348,6 +385,7 @@ int32_t app_repeatCmdLevel(void *args) {
         case ZCL_CMD_LEVEL_STOP:
             zcl_level_stop(r_cmd->srcEp, &dstEpInfo, FALSE, ZCL_SEQ_NUM, r_cmd->cmdId, &r_cmd->level_stop);
             break;
+        case ZCL_CMD_LEVEL_STEP_WITH_ON_OFF:
         case ZCL_CMD_LEVEL_STEP:
             zcl_level_step(r_cmd->srcEp, &dstEpInfo, FALSE, ZCL_SEQ_NUM, r_cmd->cmdId, &r_cmd->level_step);
             break;

@@ -224,17 +224,22 @@ static void read_button_color_temp(uint8_t i) {
 }
 
 static void read_button_level(uint8_t i) {
-    uint8_t up_down;
+    uint8_t up_down = LEVEL_MOVE_UP;
+    bool no_onoff = app_level_no_onoff(i+1);
+    bool alternating = device_settings.switchType[i] == ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE ||
+                       device_settings.switchType[i] == ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_NO_ONOFF;
     uint8_t cmdOnOff = 0xFF;
     app_button_t *button = &app_button[i];
     zcl_levelAttr_t *levelAttr = zcl_levelAttrsGet();
     levelAttr += i;
 
     switch(device_settings.switchType[i]) {
+        case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_UP_NO_ONOFF:
         case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_UP:
             up_down = LEVEL_MOVE_UP;
             cmdOnOff = ZCL_CMD_ONOFF_ON;
             break;
+        case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_DOWN_NO_ONOFF:
         case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_DOWN:
             up_down = LEVEL_MOVE_DOWN;
             cmdOnOff = ZCL_CMD_ONOFF_OFF;
@@ -262,7 +267,7 @@ static void read_button_level(uint8_t i) {
                         }
                         button_factory_reset_start();
                     } else {
-                        if (device_settings.switchType[i] == ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE) {
+                        if (alternating) {
                             if (!button->dir_up) {
                                 up_down = LEVEL_MOVE_UP;
                                 button->dir_up = true;
@@ -327,13 +332,13 @@ static void read_button_level(uint8_t i) {
                 APP_DEBUG(DEBUG_BUTTON_EN, "Level. Button %d press %d times\r\n", i+1, button->counter);
                 switch(button->counter) {
                     case ACTION_SINGLE:                                         // 1
-                        if (device_settings.switchType[i] == ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE) {
+                        if (alternating) {
                             cmdOnOff = ZCL_CMD_ONOFF_TOGGLE;
                         }
-                        app_cmdOnOff(i+1, cmdOnOff);
+                        if (!no_onoff) app_cmdOnOff(i+1, cmdOnOff);
                         break;
                     case ACTION_DOUBLE:                                         // 2
-                        if (device_settings.switchType[i] != ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE) {
+                        if (!alternating) {
                             app_step_level(i+1, up_down);
                         }
                         break;
@@ -747,6 +752,9 @@ void button_handler() {
             case ZCL_SWITCH_TYPE_MULTIFUNCTION:
                 read_button_multifunction(i);
                 break;
+            case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_NO_ONOFF:
+            case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_UP_NO_ONOFF:
+            case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_DOWN_NO_ONOFF:
             case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE:
             case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_UP:
             case ZCL_CUSTOM_SWITCH_TYPE_LEVEL_MOVE_DOWN:

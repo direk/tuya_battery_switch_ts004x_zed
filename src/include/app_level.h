@@ -5,6 +5,8 @@
 #define LEVEL_TRANSITION_TIME   25
 #define DEFAULT_MOVE_RATE       100
 
+bool app_level_no_onoff(uint8_t ep);
+
 void app_move_to_level(uint8_t ep, uint8_t up_down);
 void app_move_level(uint8_t ep, uint8_t up_down);
 void app_stop_level(uint8_t ep);
