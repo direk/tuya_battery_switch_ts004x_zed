@@ -78,6 +78,20 @@ this also works if only some lamps within a group are on. No HA, MQTT, or
 Zigbee2MQTT processing is required after configuration; Zigbee connectivity is
 still required.
 
+## Binding tab error after installing an earlier converter
+
+If the Binding tab fails with `Cannot read properties of undefined (reading
+'localeCompare')`, replace the external converter with the current file from
+this branch. Earlier files omitted `name` metadata from custom cluster and
+attribute definitions. The Binding UI could receive an undefined cluster name
+and fail while sorting it.
+
+Overwrite the existing converter (keep its installed filename, including an
+`.mjs` extension if used), restart Zigbee2MQTT, and reload its web interface.
+Do not install both `.js` and `.mjs` copies for the same model. This is a
+converter-only fix: no OTA, factory reset, re-pairing, or binding removal is
+required.
+
 ## Hardware acceptance test
 
 This firmware has not yet been tested on a physical remote or Hue lamp.
@@ -137,3 +151,12 @@ unicast bindings, and retransmissions. SDK payload definitions and command IDs
 are used directly. Converter lookup values and JavaScript syntax are also
 checked. These tests do not emulate the lamps and do not replace the hardware
 acceptance test above.
+
+To validate converter registration with installed Z2M libraries, run:
+
+```sh
+node tests/test_converters.mjs /path/to/directory/with/node_modules
+```
+
+This test uses the real herdsman cluster registration code and checks the
+cluster and attribute names, including the name sorting used by the Binding UI.

@@ -24,7 +24,8 @@ ignore the command while off; lit lamps change brightness without switching off.
 The new mode IDs are `10`, `11`, and `12`. Existing IDs and the settings layout
 are preserved. The fork also corrects outdated mode mappings in the bundled
 external converters and ensures step-command retries retain the original
-command's On/Off variant and payload.
+command's On/Off variant and payload. Custom clusters and attributes include
+explicit names to prevent the Binding tab from failing during name sorting.
 
 ## Install the update
 

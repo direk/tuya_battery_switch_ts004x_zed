@@ -84,15 +84,18 @@ export default {
         description: "Tuya wireless switch with 6 buttons with custom firmware",
         extend: [
             m.deviceAddCustomCluster("genOnOffSwitchCfg", {
+                name: "genOnOffSwitchCfg",
                 ID: 0x0007,
                 attributes: {
                     customSwitchType: {
+                        name: "customSwitchType",
                         ID: attrSwitchType,
                         type: 0x30,
                         write: true,
                         max: 0xff,
                     },
                     customDeviceModelNumber: {
+                        name: "customDeviceModelNumber",
                         ID: attrDeviceModelNumber,
                         type: 0x30,
                         write: true,
@@ -103,15 +106,18 @@ export default {
                 commandsResponse: {},
             }),
             m.deviceAddCustomCluster("genScenes", {
+                name: "genScenes",
                 ID: 0x0005,
                 attributes: {
                     customSceneId: {
+                        name: "customSceneId",
                         ID: attrSceneId,
                         type: 0x20,
                         write: true,
                         max: 0xff,
                     },
                     customGroupId: {
+                        name: "customGroupId",
                         ID: attrGroupId,
                         type: 0x21,
                         write: true,
