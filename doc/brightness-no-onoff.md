@@ -1,5 +1,30 @@
 # Brightness control without changing on/off state
 
+## Available builds
+
+Native OTA images and external converters are provided for every upstream
+build target. Select the firmware and converter matching the remote's button
+count and supported hardware; flashing a different model is not a way to add
+hardware support.
+
+| Model | Buttons | Native OTA v1.0.08 | External converter |
+| --- | --- | --- | --- |
+| TS0041 | 1 | [OTA](../bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_1.zigbee) | [Converter](../zigbee2mqtt/TS0041-z-SlD.js) |
+| TS0042 | 2 | [OTA](../bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_2.zigbee) | [Converter](../zigbee2mqtt/TS0042-z-SlD.js) |
+| TS0043 | 3 | [OTA](../bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_3.zigbee) | [Converter](../zigbee2mqtt/TS0043-z-SlD.js) |
+| TS0044 | 4 | [OTA](../bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_4.zigbee) | [Converter](../zigbee2mqtt/TS0044-z-SlD.js) |
+| TS0046 | 6 | [OTA](../bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_6.zigbee) | [Converter](../zigbee2mqtt/TS0046-z-SlD.js) |
+
+These images target devices already converted to the upstream custom firmware
+with OTA identity `6565/0226`. There is no TS0045 package: upstream does not
+provide its build target or document compatible hardware. The TS0041 build is
+included, but upstream does not identify a specific original manufacturer in
+its compatibility table; verify hardware compatibility before using it.
+
+Each converter can be saved with an `.mjs` extension instead of `.js`; install
+only one copy per model. [SHA-256 checksums](../bin/no_onoff/SHA256SUMS) cover all
+OTA images and raw binaries.
+
 ## Installation
 
 This is custom firmware for the same hardware variants supported upstream. Use
@@ -74,13 +99,17 @@ is needed to confirm this for each lamp firmware.
 ## Build and tests
 
 The bundled Telink SDK and the TC32 compiler are required for an OTA build.
-The included TS0046 binary was built with TC32 `4.5.1.tc32-elf-1.5`, using
+All five included variants were built with TC32 `4.5.1.tc32-elf-1.5`, using
 `flyskywhy/tc32` commit `fdb1e7eec0a63f88156d99178b0dc64ad7d040e4`
-(`macos` branch). The external converters were loaded successfully against
+(`macos` branch). All five external converters were loaded successfully against
 `zigbee-herdsman-converters` version `26.135.0`.
 For macOS, a compatible compiler is available in the `macos` branch of
 [flyskywhy/tc32](https://github.com/flyskywhy/tc32). The normal makefile also
 supports the Linux compiler installed under `/opt/tc32`.
+
+All five builds completed successfully, and each OTA image was checked for
+manufacturer, image type, version, header/payload lengths, CRC, and equality
+with its raw binary. This is build validation, not hardware validation.
 
 ```sh
 make PROJECT_MODEL=_model_6 COMPILE_PREFIX=/path/to/tc32/bin/tc32 -j1
@@ -98,6 +127,7 @@ Host tests need Python 3, a C compiler (`cc`), and Node.js:
 
 ```sh
 python3 tests/test_brightness.py
+python3 tests/test_ota_images.py
 ```
 
 They execute the production level-command code and button reader with mocked

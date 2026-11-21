@@ -81,7 +81,7 @@ export default {
         zigbeeModel: ["TS0042-z-SlD"],
         model: "TS0042-z-SlD",
         vendor: "Slacky-DIY",
-        description: "Tuya wireless switch with 4 buttons with custom firmware",
+        description: "Tuya wireless switch with 2 buttons with custom firmware",
         extend: [
             m.deviceAddCustomCluster("genOnOffSwitchCfg", {
                 ID: 0x0007,

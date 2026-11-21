@@ -28,7 +28,23 @@ command's On/Off variant and payload.
 
 ## Install the update
 
-For a compatible TS0046 already running the upstream custom firmware:
+Choose the files matching the remote's button count. These native OTA images
+are for compatible remotes already running the upstream custom firmware
+(OTA manufacturer `0x6565`, image type `0x0226`).
+
+| Remote | Buttons | Firmware v1.0.08 | External converter |
+| --- | --- | --- | --- |
+| TS0041 | 1 | [OTA](bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_1.zigbee) | [Converter](zigbee2mqtt/TS0041-z-SlD.js) |
+| TS0042 | 2 | [OTA](bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_2.zigbee) | [Converter](zigbee2mqtt/TS0042-z-SlD.js) |
+| TS0043 | 3 | [OTA](bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_3.zigbee) | [Converter](zigbee2mqtt/TS0043-z-SlD.js) |
+| TS0044 | 4 | [OTA](bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_4.zigbee) | [Converter](zigbee2mqtt/TS0044-z-SlD.js) |
+| TS0046 | 6 | [OTA](bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_6.zigbee) | [Converter](zigbee2mqtt/TS0046-z-SlD.js) |
+
+The TS0041 converter is new in this fork; the other four converters have been
+updated with the new modes. No TS0045 image is provided: the upstream project
+does not supply a build target or document compatible five-button hardware.
+
+For example, to update a TS0046:
 
 1. Download the [TS0046 v1.0.08 OTA image](bin/no_onoff/6565-0226-10083001-tuya_battery_switch_ts004x_zed_model_6.zigbee)
    and install it through Zigbee2MQTT's **Custom firmware** update.
@@ -42,9 +58,8 @@ For a compatible TS0046 already running the upstream custom firmware:
    for each button. Wake the remote with four quick button presses before
    changing settings or bindings.
 
-The built-in Z2M converter does not expose these new modes. Matching external
-converters are also included for TS0042, TS0043, and TS0044; the included OTA
-binary is for TS0046 only.
+The built-in Z2M converter does not expose these new modes. Install the matching
+external converter from the table above.
 
 ## Example: independent switching, shared dimming
 
@@ -63,9 +78,9 @@ provided the required Zigbee connectivity remains available.
 
 ## Validation
 
-The TS0046 v1.0.08 firmware compiled successfully. Host tests cover original and
-new modes on all six endpoints, click/hold/release gestures, group and unicast
-bindings, and command retries. All four external converters loaded successfully
+The v1.0.08 firmware compiled successfully for all five variants listed above.
+Host tests cover original and new modes on all six endpoints, click/hold/release gestures, group and unicast
+bindings, and command retries. All five external converters loaded successfully
 with `zigbee-herdsman-converters` 26.135.0. The OTA header, version, lengths, CRC,
 and binary checksums were checked.
 
@@ -76,4 +91,5 @@ Run the host tests with:
 
 ```sh
 python3 tests/test_brightness.py
+python3 tests/test_ota_images.py
 ```
