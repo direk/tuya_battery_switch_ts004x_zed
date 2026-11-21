@@ -4,6 +4,22 @@ import * as reporting from 'zigbee-herdsman-converters/lib/reporting';
 import * as utils_1 from 'zigbee-herdsman-converters/lib/utils';
 import * as logger from 'zigbee-herdsman-converters/lib/logger';
 
+const switchTypes = {
+    toggle: 0,
+    momentary: 1,
+    multifunction: 2,
+    brightness_level: 3,
+    brightness_level_up: 4,
+    brightness_level_down: 5,
+    move_to_color_temperature: 6,
+    move_to_color_temperature_up: 7,
+    move_to_color_temperature_down: 8,
+    scene: 9,
+    brightness_level_no_onoff: 10,
+    brightness_level_up_no_onoff: 11,
+    brightness_level_down_no_onoff: 12,
+};
+
 const batteryReporting = {min: 3600, max: 14400, change: 0};
 
 const attrSwitchType = 0xf000;
@@ -115,6 +131,26 @@ export default {
                 reporting: false,
             }),
             m.commandsLevelCtrl({endpointNames: ["1", "2"]}),
+            m.numeric({
+                name: "min_level",
+                endpointNames: ["1", "2"],
+                access: "ALL",
+                cluster: "genLevelCtrl",
+                attribute: "minLevel",
+                valueMin: 1,
+                valueMax: 254,
+                description: "Minimum brightness level",
+            }),
+            m.numeric({
+                name: "max_level",
+                endpointNames: ["1", "2"],
+                access: "ALL",
+                cluster: "genLevelCtrl",
+                attribute: "maxLevel",
+                valueMin: 1,
+                valueMax: 254,
+                description: "Maximum brightness level",
+            }),
             m.enumLookup({
                 name: "switch_actions",
                 endpointName: "1",
@@ -134,14 +170,7 @@ export default {
             m.enumLookup({
                 name: "switch_type",
                 endpointName: "1",
-                lookup: {
-                    toggle: 0,
-                    momentary: 1,
-                    multifunction: 2,
-                    brightness_level_up: 3,
-                    brightness_level_down: 4,
-                    scene: 5,
-                },
+                lookup: switchTypes,
                 cluster: "genOnOffSwitchCfg",
                 attribute: "customSwitchType",
                 description: "Switch type",
@@ -149,14 +178,7 @@ export default {
             m.enumLookup({
                 name: "switch_type",
                 endpointName: "2",
-                lookup: {
-                    toggle: 0,
-                    momentary: 1,
-                    multifunction: 2,
-                    brightness_level_up: 3,
-                    brightness_level_down: 4,
-                    scene: 5,
-                },
+                lookup: switchTypes,
                 cluster: "genOnOffSwitchCfg",
                 attribute: "customSwitchType",
                 description: "Switch type",

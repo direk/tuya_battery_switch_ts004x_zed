@@ -72,6 +72,26 @@ Once the update is complete, the remote is ready to pair. Enable joining in `zig
 
 ---
 
+## Brightness-only modes in this fork
+
+Version `1.0.08` adds three modes selectable independently on any button:
+
+| Switch type | Single click | Double click | Hold |
+| --- | --- | --- | --- |
+| `brightness_level_no_onoff` | No lighting command | No lighting command | Alternates between increasing and decreasing brightness |
+| `brightness_level_up_no_onoff` | No lighting command | Increases brightness by 25 units | Increases brightness toward `maxLevel` |
+| `brightness_level_down_no_onoff` | No lighting command | Decreases brightness by 25 units | Decreases brightness toward `minLevel` |
+
+Releasing a held button sends `Stop`. These modes use Level Control commands
+without On/Off and explicitly override `ExecuteIfOff` to `false` in each command.
+Compliant lamps ignore them while off, even if their stored `ExecuteIfOff` option
+is enabled. They do not send `On`, `Off`, or `Toggle`. Existing modes keep their
+original behavior, and their numeric IDs and saved settings are preserved.
+
+See [installation, binding, and build instructions](doc/brightness-no-onoff.md).
+The firmware compiles and host command tests are available; actual behavior on
+Philips Hue and other lamp firmware still needs hardware verification.
+
 ## Features
 
 <img src="doc/images/z2m-exposes.jpg"/>
@@ -142,6 +162,12 @@ Contact the original author on **[Telegram](https://t.me/slacky1965)**.
 ### To support the original author, you can donate via [YooMoney](https://yoomoney.ru/to/4100118300223495)
 
 ## Version history
+
+- 1.0.08 (this fork)
+  - Added the three per-button brightness-only modes described above.
+  - Updated the external converters for all included remote models, correcting their outdated mode IDs to match the firmware.
+  - Fixed step-command retries to preserve the original command's On/Off variant and payload.
+  - Added host tests for button gestures, command selection, and retransmission.
 
 - 1.0.01
   - Added the four-button remote `TS0044 _TZ3000_ee8nrt2l`.
